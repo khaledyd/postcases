@@ -1,0 +1,19 @@
+postcases/
+├── cmd/
+│   └── postcases/
+│       └── main.go
+├── config/
+│   └── config.go
+├── internal/
+│   ├── app/
+│   │   └── routes.go
+│   ├── database/
+│   │   ├── mongo.go
+│   │   ├── postgres.go
+│   │   └── redis.go
+│   └── middleware/
+│       ├── auth.go
+│       └── logs.go
+└── pkg/
+    └── model/
+        └── post.go
