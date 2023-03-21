@@ -6,25 +6,10 @@ import (
 
 // User represents a user in the system
 type User struct {
-	ID        int       `gorm:"primary_key;auto_increment"`
-	Username  string    `gorm:"not null"`
-	Email     string    `gorm:"not null;unique"`
-	Password  string    `gorm:"not null"`
-	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
-	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
-}
-
-// TableName sets the table name for the User model
-func (User) TableName() string {
-	return "users"
-}
-
-// BeforeCreate hashes the user password before creating a new user
-func (u *User) BeforeCreate() (err error) {
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	ID        uint      `gorm:"primary_key" json:"id"`
+	FullName  string    `gorm:"not null" json:"full_name"`
+	Email     string    `gorm:"not null;unique_index" json:"email"`
+	Password  string    `gorm:"not null" json:"-"`
+	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
 }

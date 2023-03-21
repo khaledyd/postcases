@@ -1,0 +1,106 @@
+package database
+
+import (
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/khaledyd/postcases/pkg/model"
+)
+
+// ConnectToPostgres creates a new connection to the PostgreSQL database.
+func ConnectToPostgres() (*gorm.DB, error) {
+	// Load database configuration from a separate configuration file
+	dbConfig, err := loadDBConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load database configuration: %v", err)
+	}
+
+	// Connect to the PostgreSQL database
+	db, err := gorm.Open("postgres", dbConfig.URL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to PostgreSQL: %v", err)
+	}
+
+	// Set database connection pool parameters
+	db.DB().SetMaxOpenConns(dbConfig.MaxOpenConns)
+	db.DB().SetMaxIdleConns(dbConfig.MaxIdleConns)
+	db.DB().SetConnMaxLifetime(time.Minute * time.Duration(dbConfig.ConnMaxLifetime))
+
+	// Auto migrate database schema
+	err = db.AutoMigrate(&model.User{}, &model.Post{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to auto migrate database schema: %v", err)
+	}
+
+	log.Println("Connected to the PostgreSQL database")
+
+	return db, nil
+}
+
+// loadDBConfig loads database configuration from a separate configuration file.
+func loadDBConfig() (*DBConfig, error) {
+	// Load and parse database configuration from a separate configuration file
+	// Example of database configuration in a separate configuration file:
+	// db:
+	//   url: postgres://root:cusbo@localhost:5432/postcases?sslmode=disable
+	//   max_open_conns: 30
+	//   max_idle_conns: 10
+	//   conn_max_lifetime: 300 (in seconds)
+	//   ...
+	// Configurations such as the database URL, maximum number of open connections, maximum number of idle connections,
+	// connection maximum lifetime, and other database settings can be set in the configuration file.
+	// The configuration file can be in YAML, JSON, TOML, or other formats supported by the viper package.
+	// The viper package is a popular configuration management library in Go.
+	// https://github.com/spf13/viper
+	// The configuration file should be excluded from the source code repository and kept secret.
+	// It should be managed by a configuration management tool like Vault or AWS Secrets Manager.
+	// It can also be stored in environment variables.
+	// For more information about secure configuration management, see:
+	// https://blog.golang.org/sensitive-configuration-data
+
+	// TODO: Implement the loadDBConfig function
+
+	return nil, fmt.Errorf("failed to load database configuration: not implemented yet")
+}
+
+// DBConfig represents the database configuration.
+type DBConfig struct {
+	URL             string `mapstructure:"url"`
+	MaxOpenConns    int    `mapstructure:"max_open_conns"`
+	MaxIdleConns    int    `mapstructure:"max_idle_conns"`
+	ConnMaxLifetime int    `mapstructure:"conn_max_lifetime"`
+	// Add other database configuration settings as needed
+}
+
+// sign in
+
+func signIn(c *gin.Context) {
+	type SignInInput struct {
+		Email    string `json:"email" binding:"required,email"`
+		Password string `json:"password" binding:"required"`
+	}
+	var input SignInInput
+	// validate the Fields
+	if err := c.ShouldBind(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"massage": err})
+		return
+
+	}
+	//Query the user
+
+	user := database.DB.Where(&SignInInput{Email: input.Email, Password: input.Password}).First(&input)
+	if err := c.Bind(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"massage": err})
+		return
+	}
+
+	/// preapre the response
+	response := gin.H{
+		"data": user,
+	}
+	c.JSON(http.StatusOK, response)
+
+}
