@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -19,6 +20,16 @@ func main() {
 	}
 	defer db.Close()
 	database.DB = db
+
+	// Connect to the MongoDB Atlas database
+
+	client, err := database.ConnectMongoAtlas()
+	if err != nil {
+		fmt.Printf("Error connecting to MongoDB: %v\n", err)
+		return
+	}
+	defer client.Disconnect(context.Background())
+	database.MongoClient = client
 
 	// Create a new Gin instance
 	r := gin.Default()
